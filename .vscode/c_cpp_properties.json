@@ -1,0 +1,29 @@
+{
+  "env": {
+        "MESSAGE":" If not running in a container, set this to the path of your ESP-IDF installation",
+        "IDF_TOOLS": "/Users/alex/.espressif/tools",
+        "IDF_PATH": "/Users/alex/.espressif/v6.0.1/esp-idf"
+    },
+  "configurations": [
+    {
+      "name": "ESP-IDF",
+      "compilerPath": "${IDF_TOOLS}/riscv32-esp-elf/esp-15.2.0_20251204/riscv32-esp-elf/bin/riscv32-esp-elf-gcc",
+      "compileCommands": "${config:idf.buildPath}/compile_commands.json",
+      "intelliSenseMode": "gcc-x86",
+      "includePath": [
+        "${workspaceFolder}/**",
+        "${IDF_TOOLS}/**",
+        "${IDF_PATH}/components/**"
+      ],
+      "browse": {
+        "path": [
+          "${workspaceFolder}",
+          "${IDF_PATH}",
+          "${IDF_TOOLS}"
+        ],
+        "limitSymbolsToIncludedHeaders": true
+      }
+    }
+  ],
+  "version": 4
+}
