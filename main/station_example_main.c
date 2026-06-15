@@ -13,6 +13,7 @@
 #include "esp_log.h"
 
 #include "wifi_connect.h"
+#include "mqtt_app.h"
 
 static const char *TAG = "esp32 station";
 
@@ -26,14 +27,19 @@ void app_main(void)
     }
     ESP_ERROR_CHECK(ret);
 
-    if (CONFIG_LOG_MAXIMUM_LEVEL > CONFIG_LOG_DEFAULT_LEVEL) {
-        /* If you only want to open more logs in the wifi module, you need to make the max level greater than the default level,
-         * and call esp_log_level_set() before esp_wifi_init() to improve the log level of the wifi module. */
-        esp_log_level_set(TAG, CONFIG_LOG_MAXIMUM_LEVEL);
-    }
 
     ESP_LOGI(TAG, "ESP_WIFI_MODE_STA");
     connect_to_wifi();
+    ESP_LOGI(TAG, "Start MQTT client");
+
+    start_mqtt_client();
+
+    while (1) {
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        ESP_LOGI(TAG, "Start Online");
+
+        mqtt_send(DEVICE_STATUS_TOPIC, DEVICE_STATUS_ONLINE, true);
+    } 
 }
 
 
