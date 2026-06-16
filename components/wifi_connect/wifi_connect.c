@@ -130,7 +130,8 @@ void connect_to_wifi(void)
     ESP_ERROR_CHECK(esp_wifi_start() );
 
     /* set max tx power to avoid power supply dropouts (brownouts) during radio initialization */
-    int8_t power = 50; 
+    int8_t power = CONFIG_ESP_WIFI_MAX_TX_POWER;
+    ESP_LOGI(TAG, "Set max TX power %d.", power);
     ESP_ERROR_CHECK(esp_wifi_set_max_tx_power(power));
 
     /*  */
