@@ -6,6 +6,8 @@
 #include "freertos/task.h"
 #include "mqtt_client.h"
 #include "mqtt_app.h"
+#include "ota_https.h"
+
 
 static char *TAG = "MQTT app";
 static esp_mqtt_client_handle_t client = NULL;
@@ -18,6 +20,9 @@ static void mqtt_event_handler(void *event_handler_arg, esp_event_base_t event_b
     switch (event->event_id) {
         case MQTT_EVENT_CONNECTED:
             ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
+            // Subscribe to the OTA command topic
+            esp_mqtt_client_subscribe(client, OTA_COMMAND_TOPIC, 0);
+
             break;
         case MQTT_EVENT_DISCONNECTED:
             ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED");
@@ -36,6 +41,12 @@ static void mqtt_event_handler(void *event_handler_arg, esp_event_base_t event_b
             ESP_LOGI(TAG, "MQTT_EVENT_DATA");
             ESP_LOGI(TAG, "TOPIC=%.*s", event->topic_len, event->topic);
             ESP_LOGI(TAG, "DATA=%.*s", event->data_len, event->data);
+            // Check if the received message is an OTA command
+            if (strncmp(event->topic, OTA_COMMAND_TOPIC, event->topic_len) == 0) 
+            {
+                event->data[event->data_len] = '\0'; // Null-terminate the received data
+                store_and_run_ota(event->data);
+            }
             break;
         case MQTT_EVENT_ERROR:
             ESP_LOGI(TAG, "MQTT_EVENT_ERROR");
