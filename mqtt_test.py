@@ -41,8 +41,8 @@ def on_message(client, userdata, msg):
 def trigger_ota_update(client):
 
     # The metadata payload sent to the "Notification Bell"
-    test_ota_url = "https://raw.githubusercontent.com/alexliang1975/test/main/wifi_station.bin"
-
+    #test_ota_url = "https://raw.githubusercontent.com/alexliang1975/test/main/wifi_station.bin"
+    test_ota_url= "https://raw.githubusercontent.com/alexliang1975/test/main/wifi_station_cancel_rb.bin"
     print(f"Ringing notification bell on: {OTA_TOPIC}")
     # QoS 1 guarantees the notification lands on the broker
     client.publish(OTA_TOPIC, test_ota_url, qos=1)

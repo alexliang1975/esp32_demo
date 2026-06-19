@@ -77,7 +77,9 @@ void store_and_run_ota(const char *url)
     // 2. Extract the Application Description struct from the incoming stream binary
     esp_app_desc_t app_desc;
     err = esp_https_ota_get_img_desc(ota_handle, &app_desc);
-    
+    int image_size = esp_https_ota_get_image_size(ota_handle); // Optional: Get the total image size for logging purposes
+    ESP_LOGI(TAG, "Image Size   : %d bytes", image_size);
+
     if (err == ESP_OK) {
         // --- OUTPUT FIRMWARE INFORMATION ---
         ESP_LOGI(TAG, "=============================================");
@@ -121,9 +123,9 @@ void store_and_run_ota(const char *url)
         if (err != ESP_ERR_HTTPS_OTA_IN_PROGRESS) {
             break; // Finish looping when error status changes from "In Progress"
         }
-        // You can print a loading spinner or update progress metrics here
+        int binary_size = esp_https_ota_get_image_len_read(ota_handle);
+        ESP_LOGI(TAG, "OTA Progress: %d bytes of %d bytes written to flash, progress: %.2f%%", binary_size, image_size, (float)binary_size / (float)image_size * 100);
     }
-
     // 4. Validate final structural wrap-up 
     if (esp_https_ota_is_complete_data_received(ota_handle)) {
         err = esp_https_ota_finish(ota_handle);
