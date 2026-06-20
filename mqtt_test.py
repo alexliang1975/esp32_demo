@@ -7,7 +7,7 @@ import json
 BROKER = "test.mosquitto.org"
 PORT = 1883
 STATUS_TOPIC = "device/status"
-TELEMETRY_TOPIC = "device/telemetry"
+TELEMETRY_TOPIC = "device/telemetry/firmware"
 OTA_TOPIC = "device/ota/command"
 
 # --- Event Handlers ---
@@ -41,8 +41,8 @@ def on_message(client, userdata, msg):
 def trigger_ota_update(client):
 
     # The metadata payload sent to the "Notification Bell"
-    #test_ota_url = "https://raw.githubusercontent.com/alexliang1975/test/main/wifi_station.bin"
-    test_ota_url= "https://raw.githubusercontent.com/alexliang1975/test/main/wifi_station_cancel_rb.bin"
+    test_ota_url = "https://raw.githubusercontent.com/alexliang1975/test/main/wifi_station_invalid.bin"
+    #test_ota_url= "https://raw.githubusercontent.com/alexliang1975/test/main/wifi_station_valid.bin"
     print(f"Ringing notification bell on: {OTA_TOPIC}")
     # QoS 1 guarantees the notification lands on the broker
     client.publish(OTA_TOPIC, test_ota_url, qos=1)

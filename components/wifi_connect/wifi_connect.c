@@ -134,8 +134,8 @@ void connect_to_wifi(void)
     ESP_LOGI(TAG, "Set max TX power %d.", power);
     ESP_ERROR_CHECK(esp_wifi_set_max_tx_power(power));
 
-    /*  */
-  //  ESP_ERROR_CHECK(esp_wifi_set_ps(WIFI_PS_NONE));
+    /* Power Save: Maximum Modem Sleep, allows radio to sleep between beacons */
+   ESP_ERROR_CHECK(esp_wifi_set_ps(WIFI_PS_MAX_MODEM));
 
     ESP_LOGI(TAG, "wifi_init_sta finished.");
 

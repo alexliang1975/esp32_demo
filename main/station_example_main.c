@@ -12,9 +12,11 @@
 #include "nvs_flash.h"
 #include "esp_log.h"
 #include "esp_ota_ops.h"
+#include "esp_pm.h"
 
 #include "wifi_connect.h"
 #include "mqtt_app.h"
+#include "telemetry.h"
 
 static const char *TAG = "esp32 station";
 
@@ -34,7 +36,7 @@ void app_main(void)
 
     ESP_LOGI(TAG, "Start MQTT client");
     start_mqtt_client();
-
+    
     const esp_partition_t *running = esp_ota_get_running_partition();
     esp_ota_img_states_t ota_state;
     if (esp_ota_get_state_partition(running, &ota_state) == ESP_OK) {
@@ -49,11 +51,23 @@ void app_main(void)
             }
         }
     }
-    while (1) {
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-        ESP_LOGI(TAG, "Start Online");
 
-        mqtt_send(DEVICE_STATUS_TOPIC, DEVICE_STATUS_ONLINE, true);
+    // Initialize Power Management configuration parameters
+    esp_pm_config_t pm_config = {
+        .max_freq_mhz = 160,
+        .min_freq_mhz = 10,
+        .light_sleep_enable = true // Enforces light sleep automatic cycling during idle tasks
+    };
+    ESP_ERROR_CHECK(esp_pm_configure(&pm_config));
+
+    ESP_LOGI(TAG, "Start Online");
+    mqtt_send(DEVICE_STATUS_TOPIC, DEVICE_STATUS_ONLINE, true);
+
+
+    while (1) {
+        send_firmware_telemetry();
+        vTaskDelay(10000 / portTICK_PERIOD_MS); // Delay for 10 seconds
+
     } 
 }
 
