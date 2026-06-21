@@ -5,6 +5,7 @@
 #define DEVICE_STATUS_ONLINE "online"
 #define DEVICE_STATUS_OFFLINE "offline"
 
+#define DEEP_SLEEP_TOPIC "device/deep_sleep"
 
 void start_mqtt_client();
 void stop_mqtt_client();    

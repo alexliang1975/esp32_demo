@@ -134,8 +134,8 @@ void connect_to_wifi(void)
     ESP_LOGI(TAG, "Set max TX power %d.", power);
     ESP_ERROR_CHECK(esp_wifi_set_max_tx_power(power));
 
-    /* Power Save: Maximum Modem Sleep, allows radio to sleep between beacons */
-   ESP_ERROR_CHECK(esp_wifi_set_ps(WIFI_PS_MAX_MODEM));
+    ESP_ERROR_CHECK(esp_wifi_set_ps(WIFI_PS_NONE));
+
 
     ESP_LOGI(TAG, "wifi_init_sta finished.");
 
@@ -152,6 +152,8 @@ void connect_to_wifi(void)
     if (bits & WIFI_CONNECTED_BIT) {
         ESP_LOGI(TAG, "connected to ap SSID:%s",
                  EXAMPLE_ESP_WIFI_SSID);
+        /* Power Save: Maximum Modem Sleep, allows radio to sleep between beacons */
+        ESP_ERROR_CHECK(esp_wifi_set_ps(WIFI_PS_MIN_MODEM));
     } else if (bits & WIFI_FAIL_BIT) {
         ESP_LOGI(TAG, "Failed to connect to SSID:%s",
                  EXAMPLE_ESP_WIFI_SSID);

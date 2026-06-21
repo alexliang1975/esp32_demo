@@ -9,6 +9,7 @@ PORT = 1883
 STATUS_TOPIC = "device/status"
 TELEMETRY_TOPIC = "device/telemetry/firmware"
 OTA_TOPIC = "device/ota/command"
+DEEP_SLEEP_TOPIC="device/deep_sleep"
 
 # --- Event Handlers ---
 def on_connect(client, userdata, flags, reason_code, properties=None):
@@ -41,12 +42,18 @@ def on_message(client, userdata, msg):
 def trigger_ota_update(client):
 
     # The metadata payload sent to the "Notification Bell"
-    test_ota_url = "https://raw.githubusercontent.com/alexliang1975/test/main/wifi_station_invalid.bin"
-    #test_ota_url= "https://raw.githubusercontent.com/alexliang1975/test/main/wifi_station_valid.bin"
+    #test_ota_url = "https://raw.githubusercontent.com/alexliang1975/test/main/wifi_station_invalid.bin"
+    test_ota_url= "https://raw.githubusercontent.com/alexliang1975/test/main/wifi_station_valid.bin"
     print(f"Ringing notification bell on: {OTA_TOPIC}")
     # QoS 1 guarantees the notification lands on the broker
     client.publish(OTA_TOPIC, test_ota_url, qos=1)
     print("✅ OTA Command published successfully!\n")
+
+def trigger_deep_sleep(client, sleep_duration):
+    """Publish a deep sleep command to the ESP32."""
+    print(f"Sending deep sleep command for {sleep_duration} seconds on: {DEEP_SLEEP_TOPIC}")
+    client.publish(DEEP_SLEEP_TOPIC, str(sleep_duration), qos=1)
+    print("✅ Deep Sleep Command published successfully!\n")
 
 # --- Main Logic ---
 def main():
@@ -73,6 +80,12 @@ def main():
             cmd = input().strip().lower()
             if cmd == "ota":
                 trigger_ota_update(client)
+            elif cmd == "deep_sleep":
+                try:
+                    sleep_duration = int(input("Enter sleep duration in seconds: "))
+                    trigger_deep_sleep(client, sleep_duration)
+                except ValueError:
+                    print("❌ Invalid input. Please enter a valid integer.")
             elif cmd == "exit":
                 break
     except KeyboardInterrupt:

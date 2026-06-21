@@ -12,6 +12,8 @@
 static char *TAG = "MQTT app";
 static esp_mqtt_client_handle_t client = NULL;
 
+extern void enter_deep_sleep_mode(uint64_t sleep_duration_seconds);
+
 static void mqtt_event_handler(void *event_handler_arg, esp_event_base_t event_base,
                                int32_t event_id, void *event_data)
 {
@@ -22,6 +24,7 @@ static void mqtt_event_handler(void *event_handler_arg, esp_event_base_t event_b
             ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
             // Subscribe to the OTA command topic
             esp_mqtt_client_subscribe(client, OTA_COMMAND_TOPIC, 0);
+            esp_mqtt_client_subscribe(client, DEEP_SLEEP_TOPIC, 0);
 
             break;
         case MQTT_EVENT_DISCONNECTED:
@@ -46,6 +49,16 @@ static void mqtt_event_handler(void *event_handler_arg, esp_event_base_t event_b
             {
                 event->data[event->data_len] = '\0'; // Null-terminate the received data
                 store_and_run_ota(event->data);
+            }
+            else if (strncmp(event->topic, DEEP_SLEEP_TOPIC, event->topic_len) == 0)
+            {
+                event->data[event->data_len] = '\0'; // Null-terminate the received data
+                uint64_t sleep_duration = strtoull(event->data, NULL, 10);
+                if(sleep_duration <= 0) {
+                    ESP_LOGW(TAG, "Invalid sleep duration received: %s. Using default of 10 seconds.", event->data);
+                    sleep_duration = 10; // Default to 10 seconds if invalid
+                }
+                enter_deep_sleep_mode(sleep_duration);
             }
             break;
         case MQTT_EVENT_ERROR:
@@ -86,8 +99,8 @@ void start_mqtt_client()
 void stop_mqtt_client()
 {
     if (client) {
-       // esp_mqtt_client_stop(client);
-        //esp_mqtt_client_destroy(client);
+        esp_mqtt_client_stop(client);
+        esp_mqtt_client_destroy(client);
         client = NULL;
     }
 }

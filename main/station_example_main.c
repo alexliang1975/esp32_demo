@@ -13,6 +13,7 @@
 #include "esp_log.h"
 #include "esp_ota_ops.h"
 #include "esp_pm.h"
+#include "esp_sleep.h"
 
 #include "wifi_connect.h"
 #include "mqtt_app.h"
@@ -22,6 +23,7 @@ static const char *TAG = "esp32 station";
 
 void app_main(void)
 {
+
     //Initialize NVS
     esp_err_t ret = nvs_flash_init();
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
@@ -51,7 +53,7 @@ void app_main(void)
             }
         }
     }
-
+#if 0
     // Initialize Power Management configuration parameters
     esp_pm_config_t pm_config = {
         .max_freq_mhz = 160,
@@ -59,7 +61,14 @@ void app_main(void)
         .light_sleep_enable = true // Enforces light sleep automatic cycling during idle tasks
     };
     ESP_ERROR_CHECK(esp_pm_configure(&pm_config));
-
+#endif
+    uint32_t cause = esp_sleep_get_wakeup_causes();
+    if (cause == ESP_SLEEP_WAKEUP_GPIO) {
+        ESP_LOGI(TAG, "Woke up from Deep Sleep via Button Press on GPIO!");
+        // Do your button-triggered task here...
+    } else {
+        ESP_LOGI(TAG, "Normal cold boot or power-on reset. %d", cause);
+    }
     ESP_LOGI(TAG, "Start Online");
     mqtt_send(DEVICE_STATUS_TOPIC, DEVICE_STATUS_ONLINE, true);
 
