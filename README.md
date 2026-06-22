@@ -14,7 +14,7 @@ This project demonstrates a production-ready implementation of a battery-optimiz
 * **Metadata Telemetry Generation:** Tracks running image descriptors (versioning parameters, compile dates, and active boot partitions).
 
 
-## 1. System Architecture & Power States
+## System Architecture & Power States
 
 To maximize battery life without severing active network communication links, this project actively manages its radio and CPU clock states depending on immediate peripheral demands.
 
@@ -31,7 +31,9 @@ To maximize battery life without severing active network communication links, th
 ## 2. Hardware Wiring Layouts
 
 ### 2.1. Wakeup Button Wiring (GPIO 4)
-To wake the board from Deep Sleep manually, a tactile push-button must be wired to a low-power RTC-capable pin. On the ESP32-C3, pins 0 through 5 support this capability. This project defaults to **GPIO 2**.
+
+
+To wake the board from Deep Sleep manually, a tactile push-button must be wired to a low-power RTC-capable pin. On the ESP32-C3, pins 0 through 5 support this capability. This project defaults to **GPIO 4**.
 
 ```text
                      ┌─────────────────┐
@@ -49,6 +51,10 @@ To wake the board from Deep Sleep manually, a tactile push-button must be wired 
 ```
 
 * Behavior: The pin is configured to look for a LOW logic state (ESP_GPIO_WAKEUP_GPIO_LOW). When the button is pressed, it ties GPIO 4 to Ground, triggering an immediate hardware reset wake-up.
+
+<p align="center">
+  <img src="images/ESP32C3.jpg" alt="Breadboard setup" width="800">
+</p>
 
 # Project Setup & Configuration
 
@@ -85,6 +91,73 @@ In the `Example Configuration` menu:
     * Set `WiFi Password`.
 
 Optional: If you need, change the other options according to your requirements.
+
+# Build, Verification & Diagnostics Commands
+You can verify application metadata headers and size breakdowns straight from the command line before deploying images:
+
+```
+# Compile and build project image files
+idf.py build
+
+# Query size summary and inspect embedded app version attributes
+idf.py size
+
+# Extract raw ESP-IDF App Descriptor metrics from the binary file
+esptool.py image_info build/wifi_station.bin
+
+# Flash target device and view runtime logging output
+idf.py flash monitor
+
+```
+
+
+# Integration Testing with mqtt_test.py
+The companion python script mqtt_test.py is provided to validate remote control, power states, and OTA lifecycle operations.
+
+```
+
+python mqtt_test.py 
+
+```
+
+
+## Telemetry Monitoring
+
+When executed, the test script acts as a diagnostic console, subscribing to system topics to monitor:
+
+  * LWT (Last Will and Testament): Real-time tracking of the device's network connection status (online / offline).
+  * System Metrics: Parsing published telemetry strings containing active software versions, compiled timestamps, and running partition layouts.
+
+##  Remote Command Execution
+
+The script can inject remote commands into the broker to test specific operational flows. Just type the command in console  with the following arguments depending on your test case.
+
+### Deep sleep testing
+
+ Just input "deep_sleep" command  with wake up seconds followed in the console.
+
+ * Expected Behavior: The device receives the command, cleanly closes its active MQTT socket, and drops into a 5μA Deep Sleep state. It will wake up and reboot either automatically after 30 seconds via the internal RTC timer, or instantly if the manual GPIO 4 button is pressed.
+
+### Valid OTA Firmware Upgrade Testing
+
+Just input "ota" command in the console.
+
+ * Expected Behavior: The device temporarily disables its background power-save configurations (WIFI_PS_NONE) for maximum clock and link stability, safely downloads the active image stream via HTTPS, flashes the passive app partition slot, and reboots cleanly into the newly upgraded firmware image.
+
+### Invalid OTA Fault Recovery Testing
+Just input "ota_invalid" command in the console.
+
+* Expected Behavior: The device begins downloading the payload. If the cryptographic verification or validation hash fails, the update will abort. If a broken image boots but crashes or fails to validate itself within its diagnostic window, the ESP32-C3's anti-rollback mechanism will flag the new slot as unbootable and immediately rollback to the previous working partition slot.
+
+## Test
+
+the mqtt_test.py could be used for test the fucntions:
+    * Viewing the subscribed topics such as online/offline status and firmware version.
+    * Sending OTA/Deep sleep command to ESP32 via below command:
+        * deep_sleep, with wake up seconds followed.
+        * ota, OTA update with valid firmware, which expect OTA update successfully.
+        * ota_invalid, OTA update with invalid firmware, which expect rollback to previous slot immediately after update. 
+
 
 # Troubleshooting
 

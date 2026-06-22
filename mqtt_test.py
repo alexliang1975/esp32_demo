@@ -11,6 +11,9 @@ TELEMETRY_TOPIC = "device/telemetry/firmware"
 OTA_TOPIC = "device/ota/command"
 DEEP_SLEEP_TOPIC="device/deep_sleep"
 
+invalid_ota_url = "https://raw.githubusercontent.com/alexliang1975/test/main/wifi_station_invalid.bin"
+valid_ota_url= "https://raw.githubusercontent.com/alexliang1975/test/main/wifi_station_valid.bin"
+
 # --- Event Handlers ---
 def on_connect(client, userdata, flags, reason_code, properties=None):
     """Callback triggered when the script successfully connects to the broker."""
@@ -39,14 +42,12 @@ def on_message(client, userdata, msg):
     print("-" * 40)
 
 # --- OTA Publisher Function ---
-def trigger_ota_update(client):
+def trigger_ota_update(client, ota_url):
 
     # The metadata payload sent to the "Notification Bell"
-    #test_ota_url = "https://raw.githubusercontent.com/alexliang1975/test/main/wifi_station_invalid.bin"
-    test_ota_url= "https://raw.githubusercontent.com/alexliang1975/test/main/wifi_station_valid.bin"
-    print(f"Ringing notification bell on: {OTA_TOPIC}")
+    print(f"Ringing notification bell on: {OTA_TOPIC}, with OTA URL: {ota_url}")
     # QoS 1 guarantees the notification lands on the broker
-    client.publish(OTA_TOPIC, test_ota_url, qos=1)
+    client.publish(OTA_TOPIC, ota_url, qos=1)
     print("✅ OTA Command published successfully!\n")
 
 def trigger_deep_sleep(client, sleep_duration):
@@ -79,7 +80,9 @@ def main():
         while True:
             cmd = input().strip().lower()
             if cmd == "ota":
-                trigger_ota_update(client)
+                trigger_ota_update(client, valid_ota_url)
+            elif cmd == "ota_invalid":
+                trigger_ota_update(client, invalid_ota_url)
             elif cmd == "deep_sleep":
                 try:
                     sleep_duration = int(input("Enter sleep duration in seconds: "))

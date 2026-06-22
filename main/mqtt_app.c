@@ -8,6 +8,7 @@
 #include "mqtt_app.h"
 #include "ota_https.h"
 
+#define MAX_OTA_URL_LEN 256
 
 static char *TAG = "MQTT app";
 static esp_mqtt_client_handle_t client = NULL;
@@ -47,13 +48,28 @@ static void mqtt_event_handler(void *event_handler_arg, esp_event_base_t event_b
             // Check if the received message is an OTA command
             if (strncmp(event->topic, OTA_COMMAND_TOPIC, event->topic_len) == 0) 
             {
-                event->data[event->data_len] = '\0'; // Null-terminate the received data
-                store_and_run_ota(event->data);
+                char ota_url[MAX_OTA_URL_LEN] = {0}; // Buffer to hold the OTA URL
+                if(event->data_len < MAX_OTA_URL_LEN) {
+                    strncpy(ota_url, event->data, event->data_len);
+                    ota_url[event->data_len] = '\0'; // Null-terminate the string
+                    ESP_LOGI(TAG, "Received OTA command with URL: %s", ota_url);
+                    store_and_run_ota(ota_url);
+                } else {
+                    ESP_LOGE(TAG, "OTA URL too long");
+                }
             }
             else if (strncmp(event->topic, DEEP_SLEEP_TOPIC, event->topic_len) == 0)
             {
-                event->data[event->data_len] = '\0'; // Null-terminate the received data
-                uint64_t sleep_duration = strtoull(event->data, NULL, 10);
+               char sleep_duration_str[32] = {0}; 
+               if (event->data_len < sizeof(sleep_duration_str)) {
+                    memcpy(sleep_duration_str, event->data, event->data_len);
+                    sleep_duration_str[event->data_len] = '\0'; 
+                } else {
+                    ESP_LOGE(TAG, "Sleep duration data too long (%d bytes)", event->data_len);
+                    return;
+                }
+
+                uint64_t sleep_duration = strtoull(sleep_duration_str, NULL, 10);
                 if(sleep_duration <= 0) {
                     ESP_LOGW(TAG, "Invalid sleep duration received: %s. Using default of 10 seconds.", event->data);
                     sleep_duration = 10; // Default to 10 seconds if invalid
