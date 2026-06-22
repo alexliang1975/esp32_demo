@@ -149,16 +149,6 @@ Just input "ota_invalid" command in the console.
 
 * Expected Behavior: The device begins downloading the payload. If the cryptographic verification or validation hash fails, the update will abort. If a broken image boots but crashes or fails to validate itself within its diagnostic window, the ESP32-C3's anti-rollback mechanism will flag the new slot as unbootable and immediately rollback to the previous working partition slot.
 
-## Test
-
-the mqtt_test.py could be used for test the fucntions:
-    * Viewing the subscribed topics such as online/offline status and firmware version.
-    * Sending OTA/Deep sleep command to ESP32 via below command:
-        * deep_sleep, with wake up seconds followed.
-        * ota, OTA update with valid firmware, which expect OTA update successfully.
-        * ota_invalid, OTA update with invalid firmware, which expect rollback to previous slot immediately after update. 
-
-
 # Troubleshooting
 
 ## Connection Failure: WIFI_REASON_HANDSHAKE_TIMEOUT (Reason: 204)
